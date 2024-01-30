@@ -1,0 +1,27 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <locale.h>
+int func_lados (int a, int b, int c){
+    if ( a == b && a == c  ) {
+        return printf("triâgulo equilátero!"); }
+    else if ( ((a == b) && (a == b)!= c) || ((a == c) && (a == c)!= b) || ((b == c) && (b == c) != a )) {
+        return printf("triângulo isóceles!");  }
+    else if ( (a != b && a != c) || (b != a && b != c) || ( c != b && c != a) ) {
+        return printf("triângulo escaleno!");  }
+}
+
+int main () {
+setlocale(LC_ALL,"");
+int a,b,c;
+printf("-----------");
+printf("Tipo de triângulo");
+printf("------------");
+printf("\ninserir lados do triângulo");
+printf("\nprimeiro lado A:");
+scanf("%d",&a);
+printf("\nprimeiro lado B:");
+scanf("%d",&b);
+printf("\nprimeiro lado C:");
+scanf("%d",&c);
+func_lados(a,b,c);
+return 0; }
