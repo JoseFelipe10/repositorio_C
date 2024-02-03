@@ -1,2 +1,2 @@
-# repositório 01
+# repositório linguagem C
 Repositório de programas simples
