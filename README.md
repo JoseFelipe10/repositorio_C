@@ -1,2 +1,2 @@
 # repositório 01
- Primeiro repositório.
+Repositório de programas simples
