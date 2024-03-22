@@ -1,2 +1,2 @@
 # repositório linguagem C
-Repositório de programas simples
+Programas que fiz estudando em casa e de atividades da faculdade.
