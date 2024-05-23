@@ -1,0 +1,103 @@
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <WebServer.h>
+#include <WiFiAP.h>
+#include <ESPmDNS.h>
+#include <HardwareSerial.h>
+
+HardwareSerial MySerial(2); // 2 e o UART2 (esp32 tem 3 UARTS)
+
+float dataFloat1, dataFloat2;
+double dataDouble;
+
+// configura o nome e a senha do ponto de acesso
+const char* ssid = "ESP32-Ponto_de_acesso";
+const char* senha = "123456789";
+WebServer server (80);
+
+void setup() {
+ Serial.begin(9600);
+ MySerial.begin(9600, SERIAL_8N1, 16, 17);
+
+ WiFi.softAP(ssid,senha);
+ 
+ // variavel myIP contém o endereço IP do AP
+ IPAddress myIP = WiFi.softAPIP();
+ 
+ // exibindo ip e ssid na tela do pc
+ Serial.print("SSID: ");
+ Serial.println(ssid);
+ Serial.print("Endereço IP do ponto de acesso: ");
+ Serial.println(myIP);
+ 
+
+ server.begin();
+ 
+ Serial.println("Server ON");
+
+ if (MDNS.begin("medidor")) {
+  Serial.println("MDNS responder iniciado");
+ }
+
+ server.on("/", handleRoot);
+
+ server.on("/reset", handlereset);
+
+ // erro 404
+ server.onNotFound(handleNotFound);
+
+ server.begin();
+ Serial.println("Servidor HTTP iniciado");
+}
+
+void dados() {
+  if (MySerial.available() >= sizeof(float) + sizeof(float) + sizeof(double)) { // Verifica se há dados suficientes disponíveis para leitura
+
+    MySerial.readBytes((char*)&dataFloat1, sizeof(float)); // Lê os primeiros bytes recebidos e interpreta-os como um float
+    MySerial.readBytes((char*)&dataFloat2, sizeof(float)); 
+    MySerial.readBytes((char*)&dataDouble, sizeof(double));
+
+    Serial.print("Float 1: ");
+    Serial.println(dataFloat1); // Imprime o primeiro float recebido no Monitor Serial
+    Serial.print("Float 2: ");
+    Serial.println(dataFloat2);
+    Serial.print("Double: ");
+    Serial.println(dataDouble); 
+  }
+}
+
+void handleRoot() {
+  String html = "<html><body><h1>Medidor de Energia</h1>";
+  html += "<p>Corrente: " + String(dataDouble) + " A</p>";
+  html += "<p>Potencia: " + String(dataFloat1) + " W</p>";
+  html += "<p>Potencia Consumida: " + String(dataFloat2) + " kWh</p>";
+  html += "Clique <a href=\"/reset\"<aqui</a></h2> para resetar o consumo. ";
+  server.send(200, "text/html", html);
+}
+
+void handlereset() {
+  dataFloat2 = 0 ;
+  // renderiza a função root 
+  handleRoot(); 
+}
+
+void handleNotFound() {
+  String message = "pagina nao encontrada\n\n";
+  message += "URI: ";
+  message += server.uri();
+  message += "\Method: ";
+  message += (server.method() == HTTP_GET) ? "GET" : "POST";
+  message += "\nArguments: ";
+  message += server.args();
+  message += "\n";
+  for (uint8_t i = 0; i < server.args(); i++) {
+    message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
+  }
+  server.send(404, "text/plain", message);
+}
+
+void loop(void) {
+  dados();
+  server.handleClient();
+  delay(2); 
+}
