@@ -1,0 +1,65 @@
+#include <EmonLib.h>
+#include <SoftwareSerial.h>
+SoftwareSerial mySerial(0,1); // RX TX 
+
+EnergyMonitor SCT013;
+float pinSCT = A0; // Pino analogico conectado ao sct013
+float tensao = 127.0;
+float potencia;
+float pot_consumo;
+float kilowatt;
+float consumokwh;
+unsigned long tempo_anterior = 0;
+
+void setup() {
+  SCT013.current(pinSCT, 6.0606);
+  Serial.begin(9600);
+  mySerial.begin(9600);
+}
+
+void loop() {
+  double Irms = SCT013.calcIrms(1480);  //calcula o valor da corrente
+  unsigned long tempo_atual = millis(); // tempo atual em milisegundos
+  float tempo_horas = (tempo_atual - tempo_anterior)/36000000.0; // converte tempo de mili para horas
+  
+  potencia = Irms * tensao ;         // calcula o valor da potencia instantanea
+  
+  pot_consumo += potencia;
+  
+  kilowatt += pot_consumo/1000;
+  
+  consumokwh += kilowatt * tempo_horas; // calcula o consumo de energia
+
+  tempo_anterior = tempo_atual;
+
+   // Envie dados para o ESP32:
+   mySerial.print(potencia);
+   mySerial.print(consumokwh);
+   mySerial.print(Irms);
+
+
+   Serial.print("Corrente = ");
+   Serial.print(Irms);
+   Serial.println(" A");
+
+   Serial.print("Potencia = ");
+   Serial.print(potencia);
+   Serial.println(" W");
+   
+   Serial.print("Consumo de energia = ");
+   Serial.print(consumokwh);
+   Serial.println(" KWH");
+   
+   Serial.print("soma potencia = ");
+   Serial.print(pot_consumo);
+   Serial.println("w");
+   delay(500);   
+   
+   Serial.print(".");
+   delay(500);
+   Serial.print(".");
+   delay(500);
+   Serial.println(".");
+   delay(500);  
+
+}
