@@ -12,7 +12,7 @@ float consumokwh;
 unsigned long tempo_anterior = 0;
 
 void setup() {
-  SCT013.current(pinSCT, 6.0606);
+  SCT013.current(pinSCT, 22,627);
   Serial.begin(9600);
   mySerial.begin(9600);
 }
