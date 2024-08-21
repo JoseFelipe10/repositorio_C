@@ -2,12 +2,18 @@
 #include <stdlib.h>
 #include <locale.h>
 int func_lados (int a, int b, int c){
+
+    if( (abs(b - c )<a && a <b+c ) && (abs(a - c )<b && b <a+c )  && (abs(a - b )<c && c <a+b ) ) {
+
     if ( a == b && a == c  ) {
         return printf("triâgulo equilátero!"); }
     else if ( ((a == b) && (a == b)!= c) || ((a == c) && (a == c)!= b) || ((b == c) && (b == c) != a )) {
         return printf("triângulo isóceles!");  }
     else if ( (a != b && a != c) || (b != a && b != c) || ( c != b && c != a) ) {
-        return printf("triângulo escaleno!");  }
+        return printf("triângulo escaleno!");  } 
+    }
+    else 
+        printf("o valor dos lados não formam um triângulo");
 }
 
 int main () {
