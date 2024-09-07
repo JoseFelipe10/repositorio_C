@@ -1,0 +1,26 @@
+#include <HardwareSerial.h>
+HardwareSerial MySerial (1);
+void setup()
+ {
+pinMode(5, OUTPUT); // esse led é usado para ver o sincronismo com o led do arduino e se o esp32 está recebendo os dados
+Serial.begin(9600);
+MySerial.begin(9600,SERIAL_8N1,16,17); // comunicação serial portas 16 e 17
+}
+
+void loop()
+{
+int receber_msg; 
+while (MySerial.available() > 0) {   // verifica se a bytes disponiveis no buffer
+  receber_msg = MySerial.read();  // os dados recebidos via rx tx será atribuido a variável 'receber_msg'
+  Serial.print(receber_msg); // só para testes para ver o q ta sendo recebido
+  switch(receber_msg){
+    case 12:          // caso 12 liga o led (5) e reseta a variavel receber_msg
+     digitalWrite(5,HIGH);
+     receber_msg= 0;
+    break;
+    case 15:   // caso 15 desliga o led e reseta a variavel receber_msg
+     digitalWrite(5,LOW);
+     receber_msg = 0;
+     break;
+    }  
+  }
