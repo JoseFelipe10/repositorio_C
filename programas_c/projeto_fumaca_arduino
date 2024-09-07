@@ -1,0 +1,22 @@
+#include <SoftwareSerial.h>
+SoftwareSerial mySerial(0,1);
+
+void setup(){
+pinMode(10,INPUT);   // botão simulando o sensor
+pinMode(8, OUTPUT);   // led liga quando botão HIGH
+mySerial.begin(9600);
+}
+
+void loop()
+{
+switch(digitalRead(10)){    // caso HIGH(botão apertado) envia na porta serial o numero 12
+  case HIGH:
+  mySerial.write(12);
+  digitalWrite(8,HIGH);
+  break;
+  case LOW:
+  mySerial.write(15);    // caso LOW envia 15 na porta serial
+  digitalWrite(8,LOW);
+  break;  
+}
+}
