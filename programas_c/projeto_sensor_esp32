@@ -1,0 +1,88 @@
+#include <HardwareSerial.h>
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <UniversalTelegramBot.h>
+#define BOTtoken "************************************"
+#define id_usuario "************"
+String id, text, status;  
+unsigned long tempo;
+
+HardwareSerial MySerial(1); 
+
+const char* ssid = "************"; //mudar quando usar outra rede
+const char* senha = "***********";   // mudar quando usar outra rede
+
+WiFiClientSecure client;
+UniversalTelegramBot bot(BOTtoken, client);
+
+void setup() {
+  WiFi.mode(WIFI_STA); 
+  connect(); // Função para conectar ao WiFi
+  Serial.begin(9600); // Teste, remover na versão final
+  MySerial.begin(9600, SERIAL_8N1, 16, 17); // Comunicação serial entre Arduino e ESP
+  client.setCACert(TELEGRAM_CERTIFICATE_ROOT); 
+}
+
+void loop() {
+  if (millis() - tempo > 5000) { // Faz a verificação das funções a cada 5 segundos
+    connect(); // Função para verificar a conexão
+    readTel(); // Função para ler o Telegram
+    tempo = millis(); // Reseta o tempo
+  }
+  sensor_comu(); // Função para comunicação com o sensor
+}
+
+void connect() { // Função para conectar ao WiFi e verificar a conexão
+  if (WiFi.status() != WL_CONNECTED) {
+    WiFi.begin(ssid, senha);
+    delay(2000);
+  }
+}
+
+void readTel() { // Função para ler o Telegram
+  String menu;
+  int newmsg = bot.getUpdates(bot.last_message_received + 1);
+  if (newmsg == 0) return; 
+  for (int i = 0; i < newmsg; i++) {
+    id = bot.messages[i].chat_id;
+    text = bot.messages[i].text;
+    text.toUpperCase(); // converte o texto para maiúsculas
+
+    if (id == id_usuario) { // verifica se o id do usuário é valida
+      if (text == "/START") {
+        menu += "Projeto Sensor GLP/INCÊNDIO \n ";
+        menu += "Caso seja detectado algo como: ";
+        menu += "GLP, metano, butano.\n";
+        menu += "Será enviado uma msg de emergência aqui.\n";
+        menu += "/start para ver o menu novamente\n";
+        menu += "/comando (comandos futuros)";
+        bot.sendMessage(id, menu, "");
+      }
+      else {
+        bot.sendMessage(id, "Comando inválido!", "");
+      }
+    }
+  }
+}
+// função comunicação
+void sensor_comu() {
+  int sinal = 0; 
+  String btt;
+  btt += "SENSOR MQ2 DETECTOU UM GÁS INFLAMAVÉL!\n";
+  btt += "SE POSSIVEL PROCURE SAIR DO LOCAL E CHAME";
+  btt += " OS BOMBEIROS LIGUE 193";
+
+  if (MySerial.available() > 0) { // verifica se há bytes disponíveis no buffer
+    sinal = MySerial.read(); // atribui o valor recebido a var'sinal'
+    Serial.println(sinal); // Para depuração
+    if(sinal == 12){
+      bot.sendMessage(id, btt, ""); //se n funcionar trocar por id
+      delay(500);
+      sinal = 0;
+    }
+    else{
+     Serial.println("erro");
+     sinal = 0;
+     }
+  }
+}
