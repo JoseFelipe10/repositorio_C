@@ -2,20 +2,21 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>
-#define BOTtoken "************************************"
-#define id_usuario "************"
+#define BOTtoken "********************************************"
+#define id_usuario "***********"
 String id, text, status;  
 unsigned long tempo;
 
 HardwareSerial MySerial(1); 
 
-const char* ssid = "************"; //mudar quando usar outra rede
-const char* senha = "***********";   // mudar quando usar outra rede
+const char* ssid = "*********"; //mudar quando usar outra rede
+const char* senha = "*********";   // mudar quando usar outra rede
 
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
 
 void setup() {
+
   WiFi.mode(WIFI_STA); 
   connect(); // Função para conectar ao WiFi
   Serial.begin(9600); // Teste, remover na versão final
@@ -55,9 +56,13 @@ void readTel() { // Função para ler o Telegram
         menu += "GLP, metano, butano.\n";
         menu += "Será enviado uma msg de emergência aqui.\n";
         menu += "/start para ver o menu novamente\n";
-        menu += "/comando (comandos futuros)";
+        menu += "/alarme para desativar o sinal sonoro";
         bot.sendMessage(id, menu, "");
       }
+      else if (text == "/ALARME") {
+       MySerial.write(10);
+      }
+
       else {
         bot.sendMessage(id, "Comando inválido!", "");
       }
@@ -68,17 +73,25 @@ void readTel() { // Função para ler o Telegram
 void sensor_comu() {
   int sinal = 0; 
   String btt;
+  String alarme;
+  alarme = "Sinal sonoro desativado!\n";
   btt += "SENSOR MQ2 DETECTOU UM GÁS INFLAMAVÉL!\n";
-  btt += "SE POSSIVEL PROCURE SAIR DO LOCAL E CHAME";
-  btt += " OS BOMBEIROS LIGUE 193";
+  btt += "SE POSSIVEL PROCURE SAIR DO LOCAL E CHAME ";
+  btt += "OS BOMBEIROS LIGUE 193";
 
   if (MySerial.available() > 0) { // verifica se há bytes disponíveis no buffer
     sinal = MySerial.read(); // atribui o valor recebido a var'sinal'
     Serial.println(sinal); // Para depuração
     if(sinal == 12){
-      bot.sendMessage(id, btt, ""); //se n funcionar trocar por id
+
+      bot.sendMessage(id_usuario, btt, ""); //se n funcionar trocar por id
       delay(500);
+
       sinal = 0;
+    }
+    else if (sinal == 10){
+     bot.sendMessage (id_usuario, alarme, ""); // envio da confirmação de desligamento do alarme
+     delay(500);
     }
     else{
      Serial.println("erro");
