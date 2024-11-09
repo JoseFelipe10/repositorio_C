@@ -3,20 +3,22 @@
 SoftwareSerial mySerial(0,1);
 #define sensor 1
 int valorlido = 0;
-int limite = 300;
+int limite = 400;
 int sinal = 0;
 
 void setup() {
+pinMode(10,OUTPUT); // BUZZER 
 pinMode(5,OUTPUT);
 mySerial.begin(9600);  
 }
 
 void loop() {
 valorlido = analogRead(1);
-
+buzzer();
 if (valorlido > limite && sinal == 0){
 mySerial.write(12);
 digitalWrite(5,LOW);
+tone(10,400);
 sinal = 1;
 delay(500);
 }
@@ -25,4 +27,17 @@ digitalWrite(5,HIGH);
 sinal = 0;  
 }
 
+}
+
+void buzzer () {
+ int sinal = 0;
+ if (mySerial.available() > 0) {
+    sinal = mySerial.read(); 
+    if(sinal == 10){
+     noTone(10);
+     mySerial.write(10);
+     sinal = 0;
+    }
+    else{sinal= 0;}
+ }
 }
