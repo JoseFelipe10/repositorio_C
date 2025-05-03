@@ -1,0 +1,115 @@
+#include "ACS712.h"
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <UniversalTelegramBot.h>
+#define BOTtoken "********************************************"
+#define id_usuario "***********"
+//corrente
+String x = "off";
+float corrente_mA, potencia , potencia_acumu = 0, kw_hora = 0; 
+unsigned long inicio_temp = 0;
+unsigned long tempo_seg = 0;
+
+String id, text, status;  // telegram
+
+unsigned long tempo;
+
+
+const char* ssid = "*********"; //mudar quando usar outra rede
+const char* senha = "*********";   // mudar quando usar outra rede
+
+WiFiClientSecure client;
+UniversalTelegramBot bot(BOTtoken, client);
+
+ACS712  ACS(25, 3.3, 4095, 185); // corrente
+
+void setup() {
+  ACS.autoMidPoint();
+  
+  WiFi.mode(WIFI_STA); 
+  connect(); // Função para conectar ao WiFi
+  Serial.begin(9600); // Teste, remover na versão final
+  client.setCACert(TELEGRAM_CERTIFICATE_ROOT); 
+}
+
+void loop() {
+  corrente();
+  if (millis() - tempo > 5000) { // Faz a verificação das funções a cada 5 segundos
+    connect(); // Função para verificar a conexão
+    readTel(); // Função para ler o Telegram | tirar do if
+    tempo = millis(); // Reseta o tempo
+  }
+  //sensor_comu(); // Função para comunicação com o sensor
+}
+
+void connect() { // Função para conectar ao WiFi e verificar a conexão
+  if (WiFi.status() != WL_CONNECTED) {
+    WiFi.begin(ssid, senha);
+    delay(2000);
+  }
+}
+
+void corrente()
+{
+  float corrente_mA = ACS.mA_DC();
+  Serial.println(corrente_mA);
+  potencia = 127 * (corrente_mA/1000);
+  delay(100);   
+}
+void readTel() { // Função para ler o Telegram
+  static String ult_estado = "off";
+ 
+  String menu;
+  int newmsg = bot.getUpdates(bot.last_message_received + 1);
+  if (newmsg == 0) return; 
+  for (int i = 0; i < newmsg; i++) {
+    id = bot.messages[i].chat_id;
+    text = bot.messages[i].text;
+    text.toUpperCase(); // converte o texto para maiúsculas
+
+    if (id == id_usuario) { // verifica se o id do usuário é valida
+      if (text == "/START") {
+        menu += "Projeto Medidor de Consumo \n ";
+        menu += "'/p' Para exibir a potência do aparelho";
+        menu += "'/c' Para exibir a corrente";
+        menu += "'/on' para começar a leitura do consumo";
+        menu += "'/off' para encerrar a leitura do consumo";
+        menu += "/start para ver o menu novamente\n";
+
+        bot.sendMessage(id, menu);
+      }
+      else if (text == "/C") {
+       //bot.sendMessage(id, "Corrente(mA): " + String(corrente_mA) + " mA", "");
+       bot.sendMessage(id,String(corrente_mA), "");
+      }
+      else if (text == "/P") {
+       //bot.sendMessage(id, "potencia(w): " + String(potencia) + "w", "");
+       bot.sendMessage(id,String(potencia), "");
+      }
+      else if (text == "/ON") {
+        x == "on"; 
+        bot.sendMessage(id,"Leitura iniciada", "");
+        potencia_acumu = potencia_acumu + (127 * (corrente_mA/1000));
+        if (ult_estado != "on") {
+        inicio_temp = millis();   // Inicia contagem
+        ult_estado = "on";
+      }
+      tempo_seg = (millis() - inicio_temp) / 1000;
+      } 
+      else if (text == "/OFF") {
+        x == "off";
+        kw_hora = (potencia_acumu/1000) * (tempo_seg/3600);
+        bot.sendMessage(id,"Leitura encerrada", "");
+        bot.sendMessage(id,String(kw_hora), "");
+
+        tempo_seg = 0;
+        potencia_acumu = 0;
+        ult_estado = "off";
+      }
+
+      }
+      else {
+        bot.sendMessage(id, "Comando inválido!", "");
+      }
+    }
+ }
