@@ -2,8 +2,8 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>
-#define BOTtoken "********************************************"
-#define id_usuario "***********"
+#define BOTtoken "*********************************************"
+#define id_usuario "**************"
 //corrente
 String x = "off";
 float corrente_mA, potencia , potencia_acumu = 0, kw_hora = 0; 
@@ -15,8 +15,8 @@ String id, text, status;  // telegram
 unsigned long tempo;
 
 
-const char* ssid = "*********"; //mudar quando usar outra rede
-const char* senha = "*********";   // mudar quando usar outra rede
+const char* ssid = "***************"; //mudar quando usar outra rede
+const char* senha = "**************";   // mudar quando usar outra rede
 
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
@@ -51,7 +51,7 @@ void connect() { // Função para conectar ao WiFi e verificar a conexão
 
 void corrente()
 {
-  float corrente_mA = ACS.mA_DC();
+  corrente_mA = ACS.mA_DC();
   Serial.println(corrente_mA);
   potencia = 127 * (corrente_mA/1000);
   delay(100);   
@@ -70,10 +70,10 @@ void readTel() { // Função para ler o Telegram
     if (id == id_usuario) { // verifica se o id do usuário é valida
       if (text == "/START") {
         menu += "Projeto Medidor de Consumo \n ";
-        menu += "'/p' Para exibir a potência do aparelho";
-        menu += "'/c' Para exibir a corrente";
-        menu += "'/on' para começar a leitura do consumo";
-        menu += "'/off' para encerrar a leitura do consumo";
+        menu += "'/p' Para exibir a potência do aparelho\n";
+        menu += "'/c' Para exibir a corrente\n";
+        menu += "'/on' para começar a leitura do consumo\n";
+        menu += "'/off' para encerrar a leitura do consumo\n";
         menu += "/start para ver o menu novamente\n";
 
         bot.sendMessage(id, menu);
