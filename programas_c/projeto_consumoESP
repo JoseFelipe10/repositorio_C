@@ -21,7 +21,7 @@ const char* senha = "**************";   // mudar quando usar outra rede
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
 
-ACS712  ACS(25, 3.3, 4095, 185); // corrente
+ACS712  ACS(25, 3.3, 4095, 127,19); // corrente (185 OU 127,19) 127,19 POIS FOI AJUSTADO AO DIVISOR DE TENSÃO 
 
 void setup() {
   ACS.autoMidPoint();
