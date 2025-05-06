@@ -2,11 +2,11 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>
-#define BOTtoken "*********************************************"
-#define id_usuario "**************"
+#define BOTtoken "**************************************"
+#define id_usuario "*****************"
 //corrente
 String x = "off";
-float corrente_mA, potencia , potencia_acumu = 0, kw_hora = 0; 
+float corrente_mA, potencia, kw_hora = 0; 
 unsigned long inicio_temp = 0;
 unsigned long tempo_seg = 0;
 
@@ -15,13 +15,13 @@ String id, text, status;  // telegram
 unsigned long tempo;
 
 
-const char* ssid = "***************"; //mudar quando usar outra rede
-const char* senha = "**************";   // mudar quando usar outra rede
+const char* ssid = "**************"; //mudar quando usar outra rede
+const char* senha = "**********";   // mudar quando usar outra rede
 
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
 
-ACS712  ACS(25, 3.3, 4095, 127,19); // corrente (185 OU 127,19) 127,19 POIS FOI AJUSTADO AO DIVISOR DE TENSÃO 
+ACS712  ACS(25, 3.3, 4095, 127,19); // corrente (de 185 para 127 pois foi inserido o divisor de tensão)
 
 void setup() {
   ACS.autoMidPoint();
@@ -51,10 +51,18 @@ void connect() { // Função para conectar ao WiFi e verificar a conexão
 
 void corrente()
 {
-  corrente_mA = ACS.mA_DC();
+
+  float soma = 0;
+  for (int i = 0; i < 10; i++) {
+    soma = soma + ACS.mA_DC();
+    if (soma < 0 ){
+      soma = 0;
+    }
+    delay(10);
+  } 
+  potencia = 127.0 * (corrente_mA/1000.0); // P = V(volts) * I(Amperê)    
+  corrente_mA = soma / 10;
   Serial.println(corrente_mA);
-  potencia = 127 * (corrente_mA/1000);
-  delay(100);   
 }
 void readTel() { // Função para ler o Telegram
   static String ult_estado = "off";
@@ -74,7 +82,7 @@ void readTel() { // Função para ler o Telegram
         menu += "'/c' Para exibir a corrente\n";
         menu += "'/on' para começar a leitura do consumo\n";
         menu += "'/off' para encerrar a leitura do consumo\n";
-        menu += "/start para ver o menu novamente\n";
+        menu += "'/start' para ver o menu novamente\n";
 
         bot.sendMessage(id, menu);
       }
@@ -87,23 +95,22 @@ void readTel() { // Função para ler o Telegram
        bot.sendMessage(id,String(potencia), "");
       }
       else if (text == "/ON") {
-        x == "on"; 
+        x = "on"; 
         bot.sendMessage(id,"Leitura iniciada", "");
-        potencia_acumu = potencia_acumu + (127 * (corrente_mA/1000));
+
         if (ult_estado != "on") {
         inicio_temp = millis();   // Inicia contagem
         ult_estado = "on";
       }
-      tempo_seg = (millis() - inicio_temp) / 1000;
+      tempo_seg = (millis() - inicio_temp) / 1000.0;
       } 
       else if (text == "/OFF") {
-        x == "off";
-        kw_hora = (potencia_acumu/1000) * (tempo_seg/3600);
+        x = "off";
+        kw_hora = (potencia/1000.0) * (tempo_seg/3600.0);
         bot.sendMessage(id,"Leitura encerrada", "");
         bot.sendMessage(id,String(kw_hora), "");
-
+        delay(500);
         tempo_seg = 0;
-        potencia_acumu = 0;
         ult_estado = "off";
       }
 
